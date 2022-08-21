@@ -57,6 +57,7 @@ for chunk_number in range(2):
             teams.append((name, city))
 
 print(teams)
+print('meow')
 
 #     li_response = json.loads(requests.get(s).text)
 #     chunk_teams = [filter(
