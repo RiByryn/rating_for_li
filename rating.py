@@ -1,6 +1,7 @@
 import json
 
 import requests
+import re
 from bs4 import BeautifulSoup
 
 # li = "https://ligaindigo.ru/wp-admin/admin-ajax.php?action=wp_ajax_ninja_tables_public_action&table_id=20533&target_action=get-all-data&default_sorting=old_first&ninja_table_public_nonce=ed696648d9&chunk_number=0"
@@ -13,22 +14,23 @@ from bs4 import BeautifulSoup
 # # print(city)
 # print((soup.text.strip(), city))
 
-
-# "Z0": "Новички"
-# "Z1-3": "Жители"
-# "Z4-6": "Активисты"
-# "Z7-9": "Авторитеты"
-# "Z10-12": "Депутаты"
-# "Z13-15": "Министры"
-# "Z16-18": "Премьер-министры"
-# "Z19-21": "Президенты"
-# "Z22-24": "Начальники планеты"
-# "Z25-27": "Лунные атаманы"
-# "Z28-30": "Солнечные стражи"
-# "Z31-33": "Звёздные воины"
-# "Z34-36": "Космические рейнджеры"
-# "Z37-39": "Короли галактики"
-# "Z40-42": "Императоры Вселенной"
+ranks = {
+    "Новички": range(0),
+    "Жители": range(1, 4),
+    "Активисты": range(4, 7),
+    "Авторитеты": range(7, 10),
+    "Депутаты": range(10, 13),
+    "Министры": range(13, 16),
+    "Премьер-министры": range(16, 19),
+    "Президенты": range(19, 22),
+    "Начальники планеты": range(22, 25),
+    "Лунные атаманы": range(25, 28),
+    "Солнечные стражи": range(28, 31),
+    "Звёздные воины": range(31, 34),
+    "Космические рейнджеры": range(34, 37),
+    "Короли галактики": range(37, 40),
+    "Императоры Вселенной": range(40, 43)
+}
 
 def get_team_name(meow):
     soup = BeautifulSoup(meow['ninja_column_3'], 'lxml')
@@ -36,6 +38,14 @@ def get_team_name(meow):
 
 def get_team_city(html):
     return html['ninja_column_4']
+
+def get_team_rank(html):
+    rank_link = BeautifulSoup(html['ninja_column_5'], 'html')
+    link = rank_link.contents[0].next.contents[0].next.attrs['src'].split('/')[-1]
+    rank_num = int(re.findall(r'\d+', link)[0])
+    for key, value in ranks.items():
+        if rank_num in value:
+            return key
 
 teams = []
 
@@ -53,8 +63,9 @@ for chunk_number in range(2):
         table_data = li_response[i]['value']
         name = get_team_name(table_data)
         city = get_team_city(table_data)
+        rank = get_team_rank(table_data)
         if city == 'Петербург':
-            teams.append((name, city))
+            teams.append((name, city, rank))
 
 print(teams)
 
